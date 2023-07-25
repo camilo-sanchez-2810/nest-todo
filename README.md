@@ -6,7 +6,7 @@
 
 ## Descripcion
 
-Esta aplicacion fue creada utilizando el framework de [nestjs](https://nestjs.com/), [prisma](https://www.prisma.io/) y [mongodb](https://www.mongodb.com/) como base de datos, con el fin de estudiar nuevas tecnologias. El servicio de [mongodb](https://hub.docker.com/_/mongo) fue levantado utilizando docker compose.
+Esta aplicacion fue creada utilizando el framework de [nestjs](https://nestjs.com/), [prisma](https://www.prisma.io/) y [postgre](https://www.postgresql.org/) como base de datos, con el fin de estudiar nuevas tecnologias. El servicio de [postgre](https://hub.docker.com/_/postgres) fue levantado utilizando docker compose.
 
 ## Dependencies
 
