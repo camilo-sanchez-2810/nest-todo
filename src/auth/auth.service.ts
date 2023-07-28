@@ -1,30 +1,78 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UserDto } from 'src/dto';
-import { User } from '@prisma/client';
+import { UserDto, AuthDto } from 'src/dto';
+import * as Argon from 'argon2';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable({})
 export class AuthService {
   constructor(private prisma: PrismaService) {}
-  async signup(user: UserDto) {
-    // const dto: User = {
-    //   name: user.name,
-    //   last_name: user.last_name,
-    //   email: user.email,
-    //   hash: user.password,
-    // };
-    // const newUser = await this.prisma.user.create({
-    //   data: dto,
-    // });
-    return {
-      ok: true,
-      data: 'user',
-    };
+  async signup(dto: UserDto) {
+    const hash = await Argon.hash(dto.password);
+    try {
+      const newUser =
+        await this.prisma.user.create({
+          data: {
+            name: dto.name,
+            last_name: dto.last_name ?? '',
+            email: dto.email,
+            hash,
+          },
+          select: {
+            name: true,
+            last_name: true,
+            email: true,
+          },
+        });
+      return {
+        ok: true,
+        data: newUser,
+      };
+    } catch (error) {
+      if (
+        error instanceof
+        PrismaClientKnownRequestError
+      ) {
+        if (error.code === 'P2002') {
+          throw new ForbiddenException(
+            'Email already exist',
+          );
+        }
+      }
+    }
   }
-  login() {
+  async login(dto: AuthDto) {
+    const user =
+      await this.prisma.user.findUnique({
+        where: {
+          email: dto.email,
+        },
+      });
+
+    if (!user) {
+      throw new ForbiddenException(
+        'Email incorrect',
+      );
+    }
+
+    const pwMatches = await Argon.verify(
+      user.hash,
+      dto.password,
+    );
+
+    if (!pwMatches) {
+      throw new ForbiddenException(
+        'Password incorrect',
+      );
+    }
+
+    delete user.hash;
     return {
       ok: true,
-      message: 'login success',
+      data: user,
     };
   }
 }

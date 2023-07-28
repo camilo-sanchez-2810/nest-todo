@@ -25,7 +25,6 @@ export class AuthController {
   @Post('signin')
   @UsePipes(new JoiValidationPipe(authSchema))
   singin(@Body() dto: AuthDto) {
-    console.log(dto);
-    return this.authService.login();
+    return this.authService.login(dto);
   }
 }

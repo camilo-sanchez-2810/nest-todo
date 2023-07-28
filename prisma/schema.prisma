@@ -16,6 +16,9 @@ model User {
   last_name String?
   email String @unique
   hash String
+  tasks Task[]
+  @@map("users")
+
 }
 
 model Task {
@@ -25,4 +28,7 @@ model Task {
   state Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user_id Int
+  user  User @relation(fields: [user_id], references: [id])
+  @@map("tasks")
 }
