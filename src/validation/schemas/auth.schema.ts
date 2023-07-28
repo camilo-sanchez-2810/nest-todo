@@ -17,5 +17,8 @@ const authSchema = Joi.object({
       'string.min':
         'Password must be at least 10 characters long',
     }),
+}).messages({
+  'object.unknown':
+    'You have used an invalid key.',
 });
 export default authSchema;
