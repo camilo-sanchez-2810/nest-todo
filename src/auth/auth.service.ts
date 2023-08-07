@@ -12,6 +12,7 @@ export class AuthService {
   constructor(private prisma: PrismaService) {}
   async signup(dto: UserDto) {
     const hash = await Argon.hash(dto.password);
+
     try {
       const newUser =
         await this.prisma.user.create({
@@ -27,6 +28,7 @@ export class AuthService {
             email: true,
           },
         });
+
       return {
         ok: true,
         data: newUser,
@@ -54,7 +56,7 @@ export class AuthService {
 
     if (!user) {
       throw new ForbiddenException(
-        'Email incorrect',
+        'Email incorrect or user doesnt exist',
       );
     }
 
