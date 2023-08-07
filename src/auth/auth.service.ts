@@ -6,6 +6,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UserDto, AuthDto } from 'src/dto';
 import * as Argon from 'argon2';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { KNOWN_REQUEST_ERRORS } from 'src/configs/error-codes/prisma';
 
 @Injectable({})
 export class AuthService {
@@ -38,7 +39,11 @@ export class AuthService {
         error instanceof
         PrismaClientKnownRequestError
       ) {
-        if (error.code === 'P2002') {
+        if (
+          error.code.includes(
+            KNOWN_REQUEST_ERRORS.unique_constraint_violation,
+          )
+        ) {
           throw new ForbiddenException(
             'Email already exist',
           );
