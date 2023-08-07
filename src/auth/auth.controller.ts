@@ -11,6 +11,7 @@ import {
   authSchema,
   userSchema,
 } from 'src/validation/schemas';
+import { AUTH } from 'src/configs/interfaces/auth';
 
 @Controller('auth')
 export class AuthController {
@@ -18,13 +19,13 @@ export class AuthController {
 
   @Post('signup')
   @UsePipes(new JoiValidationPipe(userSchema))
-  signup(@Body() dto: UserDto) {
+  signup(@Body() dto: UserDto): Promise<AUTH> {
     return this.authService.signup(dto);
   }
 
   @Post('signin')
   @UsePipes(new JoiValidationPipe(authSchema))
-  singin(@Body() dto: AuthDto) {
+  singin(@Body() dto: AuthDto): Promise<AUTH> {
     return this.authService.login(dto);
   }
 }

@@ -1,4 +1,4 @@
-class UserDto {
+interface UserDto {
   name: string;
   last_name: string;
   email: string;

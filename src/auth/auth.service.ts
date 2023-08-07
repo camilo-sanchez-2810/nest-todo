@@ -7,11 +7,20 @@ import { UserDto, AuthDto } from 'src/dto';
 import * as Argon from 'argon2';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { KNOWN_REQUEST_ERRORS } from 'src/configs/error-codes/prisma';
+import { JwtService } from '@nestjs/jwt';
+import { CONFIGURATION_OPTIONS } from 'src/configs/options/jwt';
+import { ConfigService } from '@nestjs/config';
+import { JWT } from 'src/configs/interfaces/jwt';
+import { AUTH } from 'src/configs/interfaces/auth';
 
 @Injectable({})
 export class AuthService {
-  constructor(private prisma: PrismaService) {}
-  async signup(dto: UserDto) {
+  constructor(
+    private prisma: PrismaService,
+    private jwt: JwtService,
+    private config: ConfigService,
+  ) {}
+  async signup(dto: UserDto): Promise<AUTH> {
     const hash = await Argon.hash(dto.password);
 
     try {
@@ -24,15 +33,17 @@ export class AuthService {
             hash,
           },
           select: {
-            name: true,
-            last_name: true,
             email: true,
+            id: true,
           },
         });
 
       return {
         ok: true,
-        data: newUser,
+        data: await this.signToken(
+          newUser.id,
+          newUser.email,
+        ),
       };
     } catch (error) {
       if (
@@ -51,11 +62,16 @@ export class AuthService {
       }
     }
   }
-  async login(dto: AuthDto) {
+  async login(dto: AuthDto): Promise<AUTH> {
     const user =
       await this.prisma.user.findUnique({
         where: {
           email: dto.email,
+        },
+        select: {
+          email: true,
+          id: true,
+          hash: true,
         },
       });
 
@@ -76,10 +92,31 @@ export class AuthService {
       );
     }
 
-    delete user.hash;
     return {
       ok: true,
-      data: user,
+      data: await this.signToken(
+        user.id,
+        user.email,
+      ),
+    };
+  }
+
+  async signToken(
+    userId: number,
+    email: string,
+  ): Promise<JWT> {
+    const payload = {
+      sub: userId,
+      email,
+    };
+    return {
+      access_token: await this.jwt.signAsync(
+        payload,
+        {
+          expiresIn: CONFIGURATION_OPTIONS.expire,
+          secret: this.config.get('JWT_SECRET'),
+        },
+      ),
     };
   }
 }
